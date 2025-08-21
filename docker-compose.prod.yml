@@ -1,0 +1,68 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: pms_postgres_prod
+    environment:
+      POSTGRES_DB: permit_manager
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pms_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: pms_server_prod
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres123}@postgres:5432/permit_manager
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 5000
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./server/uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pms_network
+    restart: unless-stopped
+    working_dir: /app
+
+  # Frontend React App
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.prod
+    container_name: pms_client_prod
+    environment:
+      REACT_APP_API_URL: ${API_URL:-http://localhost:5000}/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+    networks:
+      - pms_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  pms_network:
+    driver: bridge

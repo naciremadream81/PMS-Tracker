@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Test</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Login Test</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <div id="result"></div>
+
+    <script>
+        async function testLogin() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing login...';
+            
+            try {
+                const response = await axios.post('http://localhost:5000/api/auth/login', {
+                    email: 'demo@example.com',
+                    password: 'demo123'
+                });
+                
+                resultDiv.innerHTML = `
+                    <h3>Login Successful!</h3>
+                    <p>User: ${response.data.user.firstName} ${response.data.user.lastName}</p>
+                    <p>Email: ${response.data.user.email}</p>
+                    <p>Token: ${response.data.token.substring(0, 50)}...</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>Login Failed!</h3>
+                    <p>Error: ${error.response?.data?.error || error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

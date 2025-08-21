@@ -1,0 +1,23 @@
+services:
+  # Backend API Server - Development overrides
+  server:
+    environment:
+      NODE_ENV: development
+      DEBUG: app:*
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - ./server/uploads:/app/uploads
+    command: npm run dev
+
+  # Frontend React App - Development overrides
+  client:
+    environment:
+      REACT_APP_API_URL: http://localhost:5000/api
+      CHOKIDAR_USEPOLLING: true
+      WATCHPACK_POLLING: true
+      FAST_REFRESH: true
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    command: npm start
