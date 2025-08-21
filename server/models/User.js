@@ -57,6 +57,21 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
 
+  // Hooks for secure password storage
+  User.addHook('beforeCreate', async (user) => {
+    if (user.password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(user.password, salt);
+    }
+  });
+
+  User.addHook('beforeUpdate', async (user) => {
+    if (user.changed('password')) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(user.password, salt);
+    }
+  });
+
   // Instance methods
   User.prototype.validatePassword = async function(password) {
     return await bcrypt.compare(password, this.password);
