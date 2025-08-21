@@ -35,29 +35,7 @@ router.get('/', [
   }
 });
 
-// Get single county by ID with checklists
-router.get('/:id', async (req, res) => {
-  try {
-    const county = await County.findByPk(req.params.id, {
-      include: [{
-        model: Checklist,
-        as: 'checklists',
-        where: { isActive: true },
-        required: false,
-        order: [['order', 'ASC']]
-      }]
-    });
-
-    if (!county) {
-      return res.status(404).json({ error: 'County not found.' });
-    }
-
-    res.json({ county });
-  } catch (error) {
-    console.error('County fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch county.' });
-  }
-});
+// (moved below static routes to avoid shadowing)
 
 // Get counties by state
 router.get('/state/:state', async (req, res) => {
@@ -97,6 +75,30 @@ router.get('/states/all', async (req, res) => {
   } catch (error) {
     console.error('States fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch states.' });
+  }
+});
+
+// Get single county by ID with checklists
+router.get('/:id', async (req, res) => {
+  try {
+    const county = await County.findByPk(req.params.id, {
+      include: [{
+        model: Checklist,
+        as: 'checklists',
+        where: { isActive: true },
+        required: false,
+        order: [['order', 'ASC']]
+      }]
+    });
+
+    if (!county) {
+      return res.status(404).json({ error: 'County not found.' });
+    }
+
+    res.json({ county });
+  } catch (error) {
+    console.error('County fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch county.' });
   }
 });
 
