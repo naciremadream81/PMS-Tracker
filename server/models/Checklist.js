@@ -21,22 +21,26 @@ module.exports = (sequelize, DataTypes) => {
     },
     projectTypes: {
       type: DataTypes.ARRAY(DataTypes.STRING),
-      defaultValue: ['residential', 'commercial', 'industrial', 'renovation', 'new_construction']
+      defaultValue: ['residential', 'commercial', 'industrial', 'renovation', 'new_construction'],
+      field: 'project_types' // Map to database column
     },
     estimatedCost: {
       type: DataTypes.DECIMAL(10, 2),
       defaultValue: 0,
+      field: 'estimated_cost', // Map to database column
       validate: {
         min: 0
       }
     },
     processingTime: {
       type: DataTypes.INTEGER, // in days
-      defaultValue: 0
+      defaultValue: 0,
+      field: 'processing_time' // Map to database column
     },
     isActive: {
       type: DataTypes.BOOLEAN,
-      defaultValue: true
+      defaultValue: true,
+      field: 'is_active' // Map to database column
     },
     order: {
       type: DataTypes.INTEGER,
@@ -45,11 +49,18 @@ module.exports = (sequelize, DataTypes) => {
     countyId: {
       type: DataTypes.UUID,
       allowNull: false,
+      field: 'county_id', // Map to database column
       references: {
         model: 'counties',
         key: 'id'
       }
     }
+  }, {
+    // Table name mapping
+    tableName: 'checklists',
+    // Map timestamp fields to database columns
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   });
 
   return Checklist;

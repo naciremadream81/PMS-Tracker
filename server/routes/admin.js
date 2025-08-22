@@ -1,7 +1,7 @@
 const express = require('express');
 const { body, validationResult, query } = require('express-validator');
 const { adminAuth } = require('../middleware/auth');
-const { User, Permit, County, Checklist } = require('../models');
+const { User, Permit, County, Checklist, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 const router = express.Router();
@@ -48,7 +48,7 @@ router.get('/users', [
     const { count, rows: users } = await User.findAndCountAll({
       where: whereClause,
       attributes: { exclude: ['password'] },
-      order: [['createdAt', 'DESC']],
+      order: [['created_at', 'DESC']],
       limit: parseInt(limit),
       offset: parseInt(offset)
     });
@@ -76,7 +76,7 @@ router.get('/users/:id', async (req, res) => {
       include: [{
         model: Permit,
         as: 'permits',
-        attributes: ['id', 'projectName', 'status', 'createdAt']
+        attributes: ['id', 'projectName', 'status', 'created_at']
       }]
     });
 
@@ -297,13 +297,13 @@ router.get('/activity', [
         as: 'user',
         attributes: ['firstName', 'lastName', 'email']
       }],
-      order: [['createdAt', 'DESC']],
+      order: [['created_at', 'DESC']],
       limit
     });
 
     const recentUsers = await User.findAll({
-      attributes: ['firstName', 'lastName', 'email', 'createdAt'],
-      order: [['createdAt', 'DESC']],
+      attributes: ['firstName', 'lastName', 'email', 'created_at'],
+      order: [['created_at', 'DESC']],
       limit: Math.floor(limit / 2)
     });
 

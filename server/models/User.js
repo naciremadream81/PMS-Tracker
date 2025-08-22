@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
     firstName: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: 'first_name', // Map to database column
       validate: {
         len: [1, 50]
       }
@@ -32,6 +33,7 @@ module.exports = (sequelize, DataTypes) => {
     lastName: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: 'last_name', // Map to database column
       validate: {
         len: [1, 50]
       }
@@ -50,14 +52,24 @@ module.exports = (sequelize, DataTypes) => {
     },
     isActive: {
       type: DataTypes.BOOLEAN,
-      defaultValue: true
+      defaultValue: true,
+      field: 'is_active' // Map to database column
     },
     lastLogin: {
-      type: DataTypes.DATE
+      type: DataTypes.DATE,
+      field: 'last_login' // Map to database column
     }
+  }, {
+    // Table name mapping
+    tableName: 'users',
+    // Map timestamp fields to database columns
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   });
 
   // Hooks for secure password storage
+  // Comment out hooks to prevent double-hashing when manually inserting
+  /*
   User.addHook('beforeCreate', async (user) => {
     if (user.password) {
       const salt = await bcrypt.genSalt(10);
@@ -71,6 +83,7 @@ module.exports = (sequelize, DataTypes) => {
       user.password = await bcrypt.hash(user.password, salt);
     }
   });
+  */
 
   // Instance methods
   User.prototype.validatePassword = async function(password) {

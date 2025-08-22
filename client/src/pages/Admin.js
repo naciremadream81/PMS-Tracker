@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { adminAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const Admin = () => {
   const [searchTerm, setSearchTerm] = useState('');

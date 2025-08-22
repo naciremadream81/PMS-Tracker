@@ -136,7 +136,7 @@ router.get('/permit/:permitId', auth, async (req, res) => {
 
     const files = await PermitFile.findAll({
       where: { permitId },
-      order: [['uploadDate', 'DESC']]
+      order: [['upload_date', 'DESC']]
     });
 
     res.json({ files });

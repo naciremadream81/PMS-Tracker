@@ -14,7 +14,8 @@ const sequelize = new Sequelize(
     },
     define: {
       timestamps: true,
-      underscored: true
+      // Remove underscored: true to fix schema mismatch
+      // underscored: true
     }
   }
 );

@@ -22,7 +22,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     stateFull: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      field: 'state_full' // Map to database column
     },
     website: {
       type: DataTypes.STRING,
@@ -38,22 +39,31 @@ module.exports = (sequelize, DataTypes) => {
     },
     contactEmail: {
       type: DataTypes.STRING,
+      field: 'contact_email', // Map to database column
       validate: {
         isEmail: true
       }
     },
     processingTime: {
       type: DataTypes.INTEGER, // in days
-      defaultValue: 30
+      defaultValue: 30,
+      field: 'processing_time' // Map to database column
     },
     isActive: {
       type: DataTypes.BOOLEAN,
-      defaultValue: true
+      defaultValue: true,
+      field: 'is_active' // Map to database column
     },
     timezone: {
       type: DataTypes.STRING,
       defaultValue: 'America/New_York'
     }
+  }, {
+    // Table name mapping
+    tableName: 'counties',
+    // Map timestamp fields to database columns
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   });
 
   return County;
