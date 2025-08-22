@@ -32,17 +32,7 @@ const Admin = () => {
   const { user } = useAuth();
 
   // Check if user is admin
-  if (!user || user.role !== 'admin') {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Shield className="mx-auto h-12 w-12 text-red-500 mb-4" />
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h1>
-          <p className="text-gray-600">You must be an admin to access this page.</p>
-        </div>
-      </div>
-    );
-  }
+
 
   // Fetch users
   const { data: usersData, isLoading: usersLoading, error: usersError } = useQuery(
@@ -109,6 +99,19 @@ const Admin = () => {
       }
     }
   );
+
+  // Check if user is admin
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Shield className="mx-auto h-12 w-12 text-red-500 mb-4" />
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600">You must be an admin to access this page.</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleDeleteUser = (userId) => {
     console.log('Delete user clicked:', userId);

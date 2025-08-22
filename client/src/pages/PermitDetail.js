@@ -15,7 +15,7 @@ import {
   XCircle,
   Upload
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatDateSafely } from '../utils/dateUtils';
 import toast from 'react-hot-toast';
 
 const PermitDetail = () => {
@@ -53,6 +53,36 @@ const PermitDetail = () => {
       await updatePermitMutation.mutateAsync(data);
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleFileUpload = async (files) => {
+    try {
+      const formData = new FormData();
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+      formData.append('permitId', permit.id);
+      
+      const response = await fetch(`/api/files/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      });
+      
+      if (response.ok) {
+        toast.success('Files uploaded successfully!');
+        // Refresh the permit data
+        queryClient.invalidateQueries(['permit', id]);
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Failed to upload files');
+      }
+    } catch (error) {
+      console.error('File upload error:', error);
+      toast.error('Failed to upload files');
     }
   };
 
@@ -157,39 +187,129 @@ const PermitDetail = () => {
               <h3 className="text-lg font-medium text-gray-900">Basic Information</h3>
             </div>
             <div className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Project Name</label>
-                  <p className="text-gray-900">{permit.projectName}</p>
-                </div>
-                <div>
-                  <label className="label">Project Type</label>
-                  <p className="text-gray-900 capitalize">{permit.projectType.replace('_', ' ')}</p>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="label">Project Address</label>
-                  <p className="text-gray-900">{permit.projectAddress}</p>
-                </div>
-                {permit.estimatedCost && (
-                  <div>
-                    <label className="label">Estimated Cost</label>
-                    <p className="text-gray-900">${parseFloat(permit.estimatedCost).toLocaleString()}</p>
+              {isEditing ? (
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target);
+                  const updateData = {
+                    projectName: formData.get('projectName'),
+                    projectAddress: formData.get('projectAddress'),
+                    projectType: formData.get('projectType'),
+                    estimatedCost: parseFloat(formData.get('estimatedCost')) || 0,
+                    description: formData.get('description'),
+                    notes: formData.get('notes')
+                  };
+                  handleUpdate(updateData);
+                }} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="label">Project Name</label>
+                      <input
+                        type="text"
+                        name="projectName"
+                        defaultValue={permit.projectName}
+                        className="input-field"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Project Type</label>
+                      <select name="projectType" defaultValue={permit.projectType} className="input-field" required>
+                        <option value="residential">Residential</option>
+                        <option value="commercial">Commercial</option>
+                        <option value="industrial">Industrial</option>
+                        <option value="renovation">Renovation</option>
+                        <option value="new_construction">New Construction</option>
+                      </select>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="label">Project Address</label>
+                      <input
+                        type="text"
+                        name="projectAddress"
+                        defaultValue={permit.projectAddress}
+                        className="input-field"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Estimated Cost</label>
+                      <input
+                        type="number"
+                        name="estimatedCost"
+                        defaultValue={permit.estimatedCost || ''}
+                        step="0.01"
+                        min="0"
+                        className="input-field"
+                      />
+                    </div>
                   </div>
-                )}
-                {permit.submissionDate && (
                   <div>
-                    <label className="label">Submission Date</label>
-                    <p className="text-gray-900">{format(new Date(permit.submissionDate), 'MMM dd, yyyy')}</p>
+                    <label className="label">Description</label>
+                    <textarea
+                      name="description"
+                      defaultValue={permit.description || ''}
+                      rows="3"
+                      className="input-field"
+                    />
                   </div>
-                )}
-              </div>
-              {permit.description && (
+                  <div>
+                    <label className="label">Notes</label>
+                    <textarea
+                      name="notes"
+                      defaultValue={permit.notes || ''}
+                      rows="3"
+                      className="input-field"
+                    />
+                  </div>
+                  <div className="flex space-x-3">
+                    <button type="submit" className="btn-primary" disabled={isUpdating}>
+                      {isUpdating ? 'Saving...' : 'Save Changes'}
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setIsEditing(false)}
+                      className="btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">Project Name</label>
+                    <p className="text-gray-900">{permit.projectName}</p>
+                  </div>
+                  <div>
+                    <label className="label">Project Type</label>
+                    <p className="text-gray-900 capitalize">{permit.projectType.replace('_', ' ')}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="label">Project Address</label>
+                    <p className="text-gray-900">{permit.projectAddress}</p>
+                  </div>
+                  {permit.estimatedCost && (
+                    <div>
+                      <label className="label">Estimated Cost</label>
+                      <p className="text-gray-900">${parseFloat(permit.estimatedCost).toLocaleString()}</p>
+                    </div>
+                  )}
+                  {permit.submissionDate && (
+                    <div>
+                      <label className="label">Submission Date</label>
+                      <p className="text-gray-900">{formatDateSafely(permit.submissionDate)}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {!isEditing && permit.description && (
                 <div>
                   <label className="label">Description</label>
                   <p className="text-gray-900">{permit.description}</p>
                 </div>
               )}
-              {permit.notes && (
+              {!isEditing && permit.notes && (
                 <div>
                   <label className="label">Notes</label>
                   <p className="text-gray-900">{permit.notes}</p>
@@ -203,10 +323,26 @@ const PermitDetail = () => {
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-gray-900">Files & Documents</h3>
-                <button className="btn-primary">
+                <button 
+                  onClick={() => document.getElementById('fileInput').click()}
+                  className="btn-primary"
+                >
                   <Upload className="w-4 h-4 mr-2" />
                   Upload File
                 </button>
+                <input
+                  id="fileInput"
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files);
+                    if (files.length > 0) {
+                      handleFileUpload(files);
+                    }
+                  }}
+                />
               </div>
             </div>
             <div className="p-6">
@@ -301,9 +437,9 @@ const PermitDetail = () => {
               <h3 className="text-lg font-medium text-gray-900">Status & Actions</h3>
             </div>
             <div className="p-6 space-y-4">
-              <div className="flex items-center space-x-3">
-                {React.createElement(getStatusIcon(permit.status), { className: "h-5 w-5 text-gray-400" })}
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(permit.status)}`}>
+              <div>
+                <label className="label">Current Status</label>
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(permit.status)}`}>
                   {permit.status.replace('_', ' ')}
                 </span>
               </div>
@@ -313,9 +449,12 @@ const PermitDetail = () => {
                   <FileText className="w-4 h-4 mr-2" />
                   Submit Application
                 </button>
-                <button className="w-full btn-secondary">
+                <button 
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="w-full btn-secondary"
+                >
                   <Edit className="w-4 h-4 mr-2" />
-                  Edit Details
+                  {isEditing ? 'Cancel Edit' : 'Edit Details'}
                 </button>
               </div>
             </div>
@@ -367,7 +506,7 @@ const PermitDetail = () => {
                   <div>
                     <p className="text-sm font-medium text-gray-900">Created</p>
                     <p className="text-xs text-gray-500">
-                      {format(new Date(permit.createdAt), 'MMM dd, yyyy')}
+                      {formatDateSafely(permit.createdAt)}
                     </p>
                   </div>
                 </div>
@@ -377,7 +516,7 @@ const PermitDetail = () => {
                     <div>
                       <p className="text-sm font-medium text-gray-900">Submitted</p>
                       <p className="text-xs text-gray-500">
-                        {format(new Date(permit.submissionDate), 'MMM dd, yyyy')}
+                        {formatDateSafely(permit.submissionDate)}
                       </p>
                     </div>
                   </div>
@@ -388,7 +527,7 @@ const PermitDetail = () => {
                     <div>
                       <p className="text-sm font-medium text-gray-900">Approved</p>
                       <p className="text-xs text-gray-500">
-                        {format(new Date(permit.approvalDate), 'MMM dd, yyyy')}
+                        {formatDateSafely(permit.approvalDate)}
                       </p>
                     </div>
                   </div>

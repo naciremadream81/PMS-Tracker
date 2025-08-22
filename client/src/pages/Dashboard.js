@@ -12,7 +12,7 @@ import {
   MapPin,
   Calendar
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatDateSafely } from '../utils/dateUtils';
 
 const Dashboard = () => {
   const { data: permitsData, isLoading } = useQuery('permits', () =>
@@ -224,7 +224,7 @@ const Dashboard = () => {
                         </div>
                         <div className="flex items-center">
                           <Calendar className="w-4 h-4 mr-1" />
-                          {format(new Date(permit.createdAt), 'MMM dd, yyyy')}
+                          {formatDateSafely(permit.createdAt)}
                         </div>
                         <div className="flex items-center">
                           <FileText className="w-4 h-4 mr-1" />

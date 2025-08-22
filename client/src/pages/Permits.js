@@ -13,7 +13,7 @@ import {
   AlertCircle,
   XCircle
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatDateSafely } from '../utils/dateUtils';
 
 const Permits = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -221,7 +221,7 @@ const Permits = () => {
                           </div>
                           <div className="flex items-center">
                             <Calendar className="w-4 h-4 mr-1" />
-                            {format(new Date(permit.createdAt), 'MMM dd, yyyy')}
+                            {formatDateSafely(permit.createdAt)}
                           </div>
                           <div className="flex items-center">
                             <FileText className="w-4 h-4 mr-1" />
