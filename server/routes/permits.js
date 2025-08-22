@@ -58,7 +58,7 @@ router.get('/', auth, [
           attributes: ['id', 'filename', 'fileType', 'isUploaded']
         }
       ],
-      order: [['createdAt', 'DESC']],
+      order: [['created_at', 'DESC']],
       limit: parseInt(limit),
       offset: parseInt(offset)
     });

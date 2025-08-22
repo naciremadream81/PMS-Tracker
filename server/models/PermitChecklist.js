@@ -8,6 +8,7 @@ module.exports = (sequelize, DataTypes) => {
     permitId: {
       type: DataTypes.UUID,
       allowNull: false,
+      field: 'permit_id', // Map to database column
       references: {
         model: 'permits',
         key: 'id'
@@ -16,6 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     checklistId: {
       type: DataTypes.UUID,
       allowNull: false,
+      field: 'checklist_id', // Map to database column
       references: {
         model: 'checklists',
         key: 'id'
@@ -23,16 +25,19 @@ module.exports = (sequelize, DataTypes) => {
     },
     isCompleted: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false
+      defaultValue: false,
+      field: 'is_completed' // Map to database column
     },
     completedDate: {
-      type: DataTypes.DATE
+      type: DataTypes.DATE,
+      field: 'completed_date' // Map to database column
     },
     notes: {
       type: DataTypes.TEXT
     },
     assignedTo: {
       type: DataTypes.UUID,
+      field: 'assigned_to', // Map to database column
       references: {
         model: 'users',
         key: 'id'
@@ -45,6 +50,7 @@ module.exports = (sequelize, DataTypes) => {
     estimatedHours: {
       type: DataTypes.DECIMAL(5, 2),
       defaultValue: 0,
+      field: 'estimated_hours', // Map to database column
       validate: {
         min: 0
       }
@@ -52,10 +58,17 @@ module.exports = (sequelize, DataTypes) => {
     actualHours: {
       type: DataTypes.DECIMAL(5, 2),
       defaultValue: 0,
+      field: 'actual_hours', // Map to database column
       validate: {
         min: 0
       }
     }
+  }, {
+    // Table name mapping
+    tableName: 'permit_checklists',
+    // Map timestamp fields to database columns
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   });
 
   return PermitChecklist;
