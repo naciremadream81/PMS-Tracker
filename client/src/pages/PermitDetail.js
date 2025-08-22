@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { permitsAPI } from '../services/api';
+import { permitsAPI, filesAPI } from '../services/api';
 import { 
   FileText, 
   MapPin, 
@@ -58,31 +58,29 @@ const PermitDetail = () => {
 
   const handleFileUpload = async (files) => {
     try {
-      const formData = new FormData();
-      files.forEach(file => {
-        formData.append('files', file);
-      });
-      formData.append('permitId', permit.id);
+      console.log('Starting file upload for files:', files);
       
-      const response = await fetch(`/api/files/upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formData
-      });
-      
-      if (response.ok) {
-        toast.success('Files uploaded successfully!');
-        // Refresh the permit data
-        queryClient.invalidateQueries(['permit', id]);
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.error || 'Failed to upload files');
+      // Upload files one by one since the API only accepts single files
+      for (const file of files) {
+        console.log('Uploading file:', file.name, file.size, file.type);
+        
+        const metadata = {
+          description: `Uploaded: ${file.name}`,
+          fileType: 'document'
+        };
+        
+        console.log('Uploading file to permit:', permit.id);
+        
+        await filesAPI.upload(permit.id, file, metadata);
+        console.log('Upload successful for file:', file.name);
       }
+      
+      toast.success(`${files.length} file(s) uploaded successfully!`);
+      // Refresh the permit data
+      queryClient.invalidateQueries(['permit', id]);
     } catch (error) {
       console.error('File upload error:', error);
-      toast.error('Failed to upload files');
+      toast.error(error.response?.data?.error || error.message || 'Failed to upload files');
     }
   };
 
@@ -337,7 +335,9 @@ const PermitDetail = () => {
                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
                   className="hidden"
                   onChange={(e) => {
+                    console.log('File input change event:', e.target.files);
                     const files = Array.from(e.target.files);
+                    console.log('Files selected:', files);
                     if (files.length > 0) {
                       handleFileUpload(files);
                     }
