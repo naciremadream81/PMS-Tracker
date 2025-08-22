@@ -10,19 +10,8 @@ const router = express.Router();
 router.use(adminAuth);
 
 // Get all users with pagination and filtering
-router.get('/users', [
-  query('page').optional().isInt({ min: 1 }),
-  query('limit').optional().isInt({ min: 1, max: 100 }),
-  query('role').optional().isIn(['user', 'admin']),
-  query('isActive').optional().isBoolean(),
-  query('search').optional().trim()
-], async (req, res) => {
+router.get('/users', async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
     const {
       page = 1,
       limit = 20,
@@ -34,14 +23,16 @@ router.get('/users', [
     const offset = (page - 1) * limit;
     const whereClause = {};
 
-    if (role) whereClause.role = role;
-    if (isActive !== undefined) whereClause.isActive = isActive;
-    if (search) {
+    if (role && role !== '') whereClause.role = role;
+    if (isActive !== undefined && isActive !== '') {
+      whereClause.isActive = isActive === 'true';
+    }
+    if (search && search.trim() !== '') {
       whereClause[Op.or] = [
-        { firstName: { [Op.iLike]: `%${search}%` } },
-        { lastName: { [Op.iLike]: `%${search}%` } },
-        { email: { [Op.iLike]: `%${search}%` } },
-        { company: { [Op.iLike]: `%${search}%` } }
+        { firstName: { [Op.iLike]: `%${search.trim()}%` } },
+        { lastName: { [Op.iLike]: `%${search.trim()}%` } },
+        { email: { [Op.iLike]: `%${search.trim()}%` } },
+        { company: { [Op.iLike]: `%${search.trim()}%` } }
       ];
     }
 

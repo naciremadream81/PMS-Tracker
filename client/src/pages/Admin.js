@@ -27,6 +27,16 @@ const Admin = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [showCountyChecklists, setShowCountyChecklists] = useState(false);
+  const [selectedCounty, setSelectedCounty] = useState(null);
+  const [newUserData, setNewUserData] = useState({
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+    company: '',
+    role: 'user'
+  });
 
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -100,6 +110,30 @@ const Admin = () => {
     }
   );
 
+  // Create user mutation
+  const createUserMutation = useMutation(
+    (userData) => adminAPI.createUser(userData),
+    {
+      onSuccess: () => {
+        toast.success('User created successfully');
+        setIsCreatingUser(false);
+        setNewUserData({
+          email: '',
+          password: '',
+          firstName: '',
+          lastName: '',
+          company: '',
+          role: 'user'
+        });
+        queryClient.invalidateQueries('admin-users');
+        queryClient.invalidateQueries('admin-stats');
+      },
+      onError: (error) => {
+        toast.error(error.response?.data?.error || 'Failed to create user');
+      }
+    }
+  );
+
   // Check if user is admin
   if (!user || user.role !== 'admin') {
     return (
@@ -124,6 +158,16 @@ const Admin = () => {
   const handleToggleUserStatus = (userId, currentStatus) => {
     console.log('Toggle status clicked:', userId, currentStatus);
     toggleUserStatusMutation.mutate({ userId, isActive: !currentStatus });
+  };
+
+  const handleCreateUser = (e) => {
+    e.preventDefault();
+    createUserMutation.mutate(newUserData);
+  };
+
+  const handleCountyChecklistClick = (county) => {
+    setSelectedCounty(county);
+    setShowCountyChecklists(true);
   };
 
   const users = usersData?.users || [];
@@ -437,6 +481,135 @@ const Admin = () => {
           )}
         </div>
       </div>
+
+      {/* County Checklist Management Section */}
+      <div className="bg-white shadow rounded-lg mb-8">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-gray-900">County Checklist Management</h3>
+            <button
+              onClick={() => setShowCountyChecklists(!showCountyChecklists)}
+              className="btn-primary"
+            >
+              <CheckSquare className="w-4 h-4 mr-2" />
+              Manage Checklists
+            </button>
+          </div>
+        </div>
+        
+        {showCountyChecklists && (
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* This will be populated with counties and their checklists */}
+              <div className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                <div className="flex items-center space-x-3">
+                  <MapPin className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <h4 className="font-medium text-gray-900">Alachua County</h4>
+                    <p className="text-sm text-gray-500">24 checklist items</p>
+                  </div>
+                </div>
+              </div>
+              {/* Add more counties here */}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* User Creation Form */}
+      {isCreatingUser && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Create New User</h3>
+              <form onSubmit={handleCreateUser} className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="label">Email</label>
+                  <input
+                    id="email"
+                    type="email"
+                    className="input"
+                    value={newUserData.email}
+                    onChange={(e) => setNewUserData({...newUserData, email: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="password" className="label">Password</label>
+                  <input
+                    id="password"
+                    type="password"
+                    className="input"
+                    value={newUserData.password}
+                    onChange={(e) => setNewUserData({...newUserData, password: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="firstName" className="label">First Name</label>
+                  <input
+                    id="firstName"
+                    type="text"
+                    className="input"
+                    value={newUserData.firstName}
+                    onChange={(e) => setNewUserData({...newUserData, firstName: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="lastName" className="label">Last Name</label>
+                  <input
+                    id="lastName"
+                    type="text"
+                    className="input"
+                    value={newUserData.lastName}
+                    onChange={(e) => setNewUserData({...newUserData, lastName: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="company" className="label">Company</label>
+                  <input
+                    id="company"
+                    type="text"
+                    className="input"
+                    value={newUserData.company}
+                    onChange={(e) => setNewUserData({...newUserData, company: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="role" className="label">Role</label>
+                  <select
+                    id="role"
+                    className="input"
+                    value={newUserData.role}
+                    onChange={(e) => setNewUserData({...newUserData, role: e.target.value})}
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    type="submit"
+                    className="btn-primary flex-1"
+                    disabled={createUserMutation.isLoading}
+                  >
+                    {createUserMutation.isLoading ? 'Creating...' : 'Create User'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCreatingUser(false)}
+                    className="btn-secondary flex-1"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recent Activity */}
       <div className="bg-white shadow rounded-lg">
