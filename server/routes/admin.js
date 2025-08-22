@@ -1,5 +1,4 @@
 const express = require('express');
-const { body, validationResult, query } = require('express-validator');
 const { adminAuth } = require('../middleware/auth');
 const { User, Permit, County, Checklist, sequelize } = require('../models');
 const { Op } = require('sequelize');
@@ -11,6 +10,7 @@ router.use(adminAuth);
 
 // Get all users with pagination and filtering
 router.get('/users', async (req, res) => {
+  console.log('GET /users route hit with query:', req.query);
   try {
     const {
       page = 1,
@@ -83,23 +83,22 @@ router.get('/users/:id', async (req, res) => {
 });
 
 // Create new user
-router.post('/users', [
-  body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min: 6 }),
-  body('firstName').trim().isLength({ min: 1, max: 50 }),
-  body('lastName').trim().isLength({ min: 1, max: 50 }),
-  body('company').optional().trim(),
-  body('phone').optional().trim(),
-  body('role').isIn(['user', 'admin']),
-  body('isActive').isBoolean()
-], async (req, res) => {
+router.post('/users', async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+    const { email, password, firstName, lastName, company, phone, role, isActive } = req.body;
+
+    // Basic validation
+    if (!email || !password || !firstName || !lastName) {
+      return res.status(400).json({ error: 'Email, password, first name, and last name are required.' });
     }
 
-    const { email, password, firstName, lastName, company, phone, role, isActive } = req.body;
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+
+    if (role && !['user', 'admin'].includes(role)) {
+      return res.status(400).json({ error: 'Role must be either "user" or "admin".' });
+    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
@@ -130,19 +129,8 @@ router.post('/users', [
 });
 
 // Update user
-router.put('/users/:id', [
-  body('firstName').optional().trim().isLength({ min: 1, max: 50 }),
-  body('lastName').optional().trim().isLength({ min: 1, max: 50 }),
-  body('company').optional().trim(),
-  body('phone').optional().trim(),
-  body('role').optional().isIn(['user', 'admin']),
-  body('isActive').optional().isBoolean()
-], async (req, res) => {
+router.put('/users/:id', async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
 
     const user = await User.findByPk(req.params.id);
     if (!user) {
@@ -197,14 +185,8 @@ router.delete('/users/:id', async (req, res) => {
 });
 
 // Change user password
-router.put('/users/:id/password', [
-  body('newPassword').isLength({ min: 6 })
-], async (req, res) => {
+router.put('/users/:id/password', async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
 
     const user = await User.findByPk(req.params.id);
     if (!user) {
@@ -305,6 +287,121 @@ router.get('/activity', [
   } catch (error) {
     console.error('Activity fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch recent activity.' });
+  }
+});
+
+// County Checklist Management
+
+// Get all counties with their checklists
+router.get('/counties', async (req, res) => {
+  try {
+    const counties = await County.findAll({
+      include: [{
+        model: Checklist,
+        as: 'checklists',
+        attributes: ['id', 'name', 'description', 'category', 'isActive', 'order']
+      }],
+      order: [['name', 'ASC'], [{ model: Checklist, as: 'checklists' }, 'order', 'ASC']]
+    });
+
+    res.json({ counties });
+  } catch (error) {
+    console.error('Counties fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch counties.' });
+  }
+});
+
+// Get checklists for a specific county
+router.get('/counties/:countyId/checklists', async (req, res) => {
+  try {
+    const { countyId } = req.params;
+    
+    const checklists = await Checklist.findAll({
+      where: { countyId },
+      order: [['order', 'ASC'], ['name', 'ASC']]
+    });
+
+    res.json({ checklists });
+  } catch (error) {
+    console.error('County checklists fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch county checklists.' });
+  }
+});
+
+// Create new checklist for a county
+router.post('/counties/:countyId/checklists', async (req, res) => {
+  try {
+    const { countyId } = req.params;
+    const { name, description, category, projectTypes, estimatedCost, processingTime, isActive, order } = req.body;
+
+    // Basic validation
+    if (!name) {
+      return res.status(400).json({ error: 'Checklist name is required.' });
+    }
+
+    const checklist = await Checklist.create({
+      name,
+      description,
+      category: category || 'general',
+      projectTypes: projectTypes || [],
+      estimatedCost: estimatedCost || 0,
+      processingTime: processingTime || 'Unknown',
+      isActive: isActive !== undefined ? isActive : true,
+      order: order || 0,
+      countyId
+    });
+
+    res.status(201).json({ checklist });
+  } catch (error) {
+    console.error('Checklist creation error:', error);
+    res.status(500).json({ error: 'Failed to create checklist.' });
+  }
+});
+
+// Update checklist
+router.put('/checklists/:checklistId', async (req, res) => {
+  try {
+    const { checklistId } = req.params;
+    const { name, description, category, projectTypes, estimatedCost, processingTime, isActive, order } = req.body;
+
+    const checklist = await Checklist.findByPk(checklistId);
+    if (!checklist) {
+      return res.status(404).json({ error: 'Checklist not found.' });
+    }
+
+    await checklist.update({
+      name: name || checklist.name,
+      description: description !== undefined ? description : checklist.description,
+      category: category || checklist.category,
+      projectTypes: projectTypes !== undefined ? projectTypes : checklist.projectTypes,
+      estimatedCost: estimatedCost !== undefined ? estimatedCost : checklist.estimatedCost,
+      processingTime: processingTime || checklist.processingTime,
+      isActive: isActive !== undefined ? isActive : checklist.isActive,
+      order: order !== undefined ? order : checklist.order
+    });
+
+    res.json({ checklist });
+  } catch (error) {
+    console.error('Checklist update error:', error);
+    res.status(500).json({ error: 'Failed to update checklist.' });
+  }
+});
+
+// Delete checklist
+router.delete('/checklists/:checklistId', async (req, res) => {
+  try {
+    const { checklistId } = req.params;
+
+    const checklist = await Checklist.findByPk(checklistId);
+    if (!checklist) {
+      return res.status(404).json({ error: 'Checklist not found.' });
+    }
+
+    await checklist.destroy();
+    res.json({ message: 'Checklist deleted successfully.' });
+  } catch (error) {
+    console.error('Checklist deletion error:', error);
+    res.status(500).json({ error: 'Failed to delete checklist.' });
   }
 });
 

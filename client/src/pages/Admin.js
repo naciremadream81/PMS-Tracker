@@ -80,6 +80,19 @@ const Admin = () => {
     }
   );
 
+  // Fetch counties for checklist management
+  const { data: countiesData, isLoading: countiesLoading, error: countiesError } = useQuery(
+    'admin-counties',
+    () => adminAPI.getCounties(),
+    {
+      enabled: showCountyChecklists,
+      onError: (error) => {
+        console.error('Failed to fetch counties:', error);
+        toast.error('Failed to fetch counties');
+      }
+    }
+  );
+
   // Delete user mutation
   const deleteUserMutation = useMutation(
     (userId) => adminAPI.deleteUser(userId),
@@ -499,19 +512,42 @@ const Admin = () => {
         
         {showCountyChecklists && (
           <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* This will be populated with counties and their checklists */}
-              <div className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
-                <div className="flex items-center space-x-3">
-                  <MapPin className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <h4 className="font-medium text-gray-900">Alachua County</h4>
-                    <p className="text-sm text-gray-500">24 checklist items</p>
-                  </div>
-                </div>
+            {countiesLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <p className="mt-2 text-gray-500">Loading counties...</p>
               </div>
-              {/* Add more counties here */}
-            </div>
+            ) : countiesError ? (
+              <div className="text-center py-8 text-red-600">
+                <p>Error loading counties. Please try again.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {countiesData?.counties?.map((county) => (
+                  <div 
+                    key={county.id} 
+                    className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => handleCountyChecklistClick(county)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <MapPin className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <h4 className="font-medium text-gray-900">{county.name}</h4>
+                        <p className="text-sm text-gray-500">
+                          {county.checklists?.length || 0} checklist items
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )) || (
+                  <div className="col-span-full text-center py-8 text-gray-500">
+                    <MapPin className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No counties found</h3>
+                    <p className="mt-1 text-sm text-gray-500">Counties will appear here once loaded.</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

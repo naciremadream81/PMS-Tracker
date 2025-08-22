@@ -100,7 +100,18 @@ export const filesAPI = {
 
 // Admin API
 export const adminAPI = {
-  getUsers: (params) => api.get('/admin/users', { params }),
+  getUsers: (params) => {
+    // Filter out empty parameters
+    const filteredParams = {};
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== '' && params[key] !== undefined && params[key] !== null) {
+          filteredParams[key] = params[key];
+        }
+      });
+    }
+    return api.get('/admin/users', { params: filteredParams });
+  },
   getUser: (id) => api.get(`/admin/users/${id}`),
   createUser: (userData) => api.post('/admin/users', userData),
   updateUser: (id, userData) => api.put(`/admin/users/${id}`, userData),
@@ -108,6 +119,13 @@ export const adminAPI = {
   changeUserPassword: (id, passwordData) => api.put(`/admin/users/${id}/password`, passwordData),
   getStats: () => api.get('/admin/stats'),
   getActivity: (params) => api.get('/admin/activity', { params }),
+  
+  // County Checklist Management
+  getCounties: () => api.get('/admin/counties'),
+  getCountyChecklists: (countyId) => api.get(`/admin/counties/${countyId}/checklists`),
+  createCountyChecklist: (countyId, checklistData) => api.post(`/admin/counties/${countyId}/checklists`, checklistData),
+  updateChecklist: (checklistId, checklistData) => api.put(`/admin/checklists/${checklistId}`, checklistData),
+  deleteChecklist: (checklistId) => api.delete(`/admin/checklists/${checklistId}`),
 };
 
 export default api;
