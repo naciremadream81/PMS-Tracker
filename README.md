@@ -43,7 +43,11 @@ A comprehensive, cross-platform permit package tracking and organizing applicati
 │   ├── middleware/        # Custom middleware
 │   ├── scripts/           # Database scripts
 │   └── uploads/           # File upload directory
-└── docker-compose.yml     # Development environment
+├── docker-compose.yml     # Development environment
+├── docker-compose.prod.yml # Production environment
+├── env.example            # Environment configuration template
+├── setup-*.sh            # Automated setup scripts
+└── extra stuff/           # Archived/unused files (see README inside)
 ```
 
 ## 🛠️ Technology Stack

@@ -258,9 +258,7 @@ router.get('/stats', async (req, res) => {
 });
 
 // Get recent activity
-router.get('/activity', [
-  query('limit').optional().isInt({ min: 1, max: 100 })
-], async (req, res) => {
+router.get('/activity', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 20;
 
