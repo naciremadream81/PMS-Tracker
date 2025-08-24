@@ -11,6 +11,7 @@ const permitRoutes = require('./routes/permits');
 const countyRoutes = require('./routes/counties');
 const fileRoutes = require('./routes/files');
 const checklistRoutes = require('./routes/checklists');
+const checklistFileRoutes = require('./routes/checklistFiles');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
@@ -48,6 +49,7 @@ app.use('/api/permits', permitRoutes);
 app.use('/api/counties', countyRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/checklists', checklistRoutes);
+app.use('/api/checklist-files', checklistFileRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Error handling middleware

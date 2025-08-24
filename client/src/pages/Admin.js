@@ -19,6 +19,7 @@ import {
 import toast from 'react-hot-toast';
 import { adminAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import CountyChecklistModal from '../components/CountyChecklistModal';
 
 const Admin = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -677,6 +678,16 @@ const Admin = () => {
           </div>
         </div>
       </div>
+
+      {/* County Checklist Modal */}
+      <CountyChecklistModal
+        county={selectedCounty}
+        isOpen={showCountyChecklists}
+        onClose={() => {
+          setShowCountyChecklists(false);
+          setSelectedCounty(null);
+        }}
+      />
     </div>
   );
 };

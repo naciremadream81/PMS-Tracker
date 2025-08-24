@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { permitsAPI, filesAPI } from '../services/api';
+import ChecklistItemWithDocuments from '../components/ChecklistItemWithDocuments';
 import { 
   FileText, 
   MapPin, 
@@ -389,39 +390,25 @@ const PermitDetail = () => {
             <div className="bg-white shadow rounded-lg">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900">Requirements Checklist</h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  Upload required documents for each checklist item to complete your permit application.
+                </p>
               </div>
               <div className="p-6">
-                <div className="space-y-3">
+                {/* Debug info */}
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+                  <p><strong>Debug:</strong> Found {permit.checklists.length} checklist items</p>
+                  <p>First item: {JSON.stringify(permit.checklists[0], null, 2)}</p>
+                </div>
+                <div className="space-y-4">
                   {permit.checklists.map((checklist) => (
-                    <div key={checklist.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <input
-                          type="checkbox"
-                          checked={checklist.isCompleted}
-                          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                          readOnly
-                        />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {checklist.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {checklist.category} • ${checklist.estimatedCost}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {checklist.isCompleted ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Completed
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            Pending
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <ChecklistItemWithDocuments
+                      key={checklist.id}
+                      checklistItem={checklist}
+                      permitId={permit.id}
+                      onUpdate={() => queryClient.invalidateQueries(['permit', id])}
+                      isAdmin={false}
+                    />
                   ))}
                 </div>
               </div>

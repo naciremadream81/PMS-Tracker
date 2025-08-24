@@ -98,6 +98,27 @@ export const filesAPI = {
   update: (fileId, metadata) => api.put(`/files/${fileId}`, metadata),
 };
 
+// Checklist Files API
+export const checklistFilesAPI = {
+  getByPermitChecklist: (permitChecklistId) => api.get(`/checklist-files/permit-checklist/${permitChecklistId}`),
+  upload: (permitChecklistId, file, metadata) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (metadata) {
+      Object.keys(metadata).forEach(key => {
+        formData.append(key, metadata[key]);
+      });
+    }
+    return api.post(`/checklist-files/upload/${permitChecklistId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  update: (fileId, metadata) => api.put(`/checklist-files/${fileId}`, metadata),
+  review: (fileId, reviewData) => api.put(`/checklist-files/${fileId}/review`, reviewData),
+  download: (fileId) => api.get(`/checklist-files/${fileId}/download`, { responseType: 'blob' }),
+  delete: (fileId) => api.delete(`/checklist-files/${fileId}`),
+};
+
 // Admin API
 export const adminAPI = {
   getUsers: (params) => {

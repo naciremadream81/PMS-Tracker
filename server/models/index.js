@@ -27,6 +27,7 @@ const Checklist = require('./Checklist')(sequelize, Sequelize);
 const Permit = require('./Permit')(sequelize, Sequelize);
 const PermitFile = require('./PermitFile')(sequelize, Sequelize);
 const PermitChecklist = require('./PermitChecklist')(sequelize, Sequelize);
+const ChecklistFile = require('./ChecklistFile')(sequelize, Sequelize);
 
 // Define associations
 User.hasMany(Permit, { foreignKey: 'userId', as: 'permits' });
@@ -54,6 +55,34 @@ Checklist.belongsToMany(Permit, {
   as: 'permits'
 });
 
+// Checklist file associations
+PermitChecklist.hasMany(ChecklistFile, { 
+  foreignKey: 'permitChecklistId', 
+  as: 'files' 
+});
+ChecklistFile.belongsTo(PermitChecklist, { 
+  foreignKey: 'permitChecklistId', 
+  as: 'permitChecklist' 
+});
+
+User.hasMany(ChecklistFile, { 
+  foreignKey: 'uploadedBy', 
+  as: 'uploadedChecklistFiles' 
+});
+ChecklistFile.belongsTo(User, { 
+  foreignKey: 'uploadedBy', 
+  as: 'uploadedByUser' 
+});
+
+User.hasMany(ChecklistFile, { 
+  foreignKey: 'reviewedBy', 
+  as: 'reviewedChecklistFiles' 
+});
+ChecklistFile.belongsTo(User, { 
+  foreignKey: 'reviewedBy', 
+  as: 'reviewedByUser' 
+});
+
 module.exports = {
   sequelize,
   User,
@@ -61,5 +90,6 @@ module.exports = {
   Checklist,
   Permit,
   PermitFile,
-  PermitChecklist
+  PermitChecklist,
+  ChecklistFile
 };

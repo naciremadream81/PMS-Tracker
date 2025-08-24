@@ -62,6 +62,24 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         min: 0
       }
+    },
+    documentsRequired: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      field: 'documents_required'
+    },
+    documentsComplete: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      field: 'documents_complete'
+    },
+    documentsDueDate: {
+      type: DataTypes.DATE,
+      field: 'documents_due_date'
+    },
+    documentInstructions: {
+      type: DataTypes.TEXT,
+      field: 'document_instructions'
     }
   }, {
     // Table name mapping
