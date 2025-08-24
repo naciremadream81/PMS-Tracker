@@ -70,7 +70,7 @@ router.get('/permit-checklist/:permitChecklistId', async (req, res) => {
           attributes: ['id', 'firstName', 'lastName', 'email']
         }
       ],
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
 
     res.json({ files });

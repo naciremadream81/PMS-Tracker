@@ -1,7 +1,7 @@
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: pms_postgres
     environment:
       POSTGRES_DB: permit_manager
@@ -20,6 +20,8 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
 
   # Backend API Server
   server:
@@ -50,6 +52,8 @@ services:
     working_dir: /app
     command: npm run dev
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
       interval: 30s
@@ -61,7 +65,7 @@ services:
   client:
     build:
       context: ./client
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: pms_client
     environment:
       REACT_APP_API_URL: http://server:5000/api
@@ -81,6 +85,8 @@ services:
     working_dir: /app
     command: npm start
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
       interval: 30s

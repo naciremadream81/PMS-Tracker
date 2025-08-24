@@ -1,4 +1,5 @@
-FROM node:20-alpine
+# Build stage
+FROM node:22-alpine AS build
 
 # Set working directory
 WORKDIR /app
@@ -9,18 +10,41 @@ RUN apk add --no-cache python3 make g++
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies with better caching
+RUN npm ci --only=production && npm cache clean --force
 
 # Copy source code
 COPY . .
 
+# Build the application
+RUN npm run build
+
+# Production stage
+FROM nginx:1.25-alpine
+
+# Create nginx user for security
+RUN addgroup -g 1001 -S nginx && \
+    adduser -S nginx -u 1001
+
+# Copy built app from build stage
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Set proper permissions
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chmod -R 755 /usr/share/nginx/html
+
+# Switch to non-root user
+USER nginx
+
 # Expose port
-EXPOSE 3000
+EXPOSE 80
 
-# Health check for development
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
 
-# Start the application
-CMD ["npm", "start"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

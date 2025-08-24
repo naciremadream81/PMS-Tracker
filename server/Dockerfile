@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -10,11 +10,11 @@ RUN apk add --no-cache python3 make g++
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies with better caching
 RUN npm ci --only=production && npm cache clean --force
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:22-alpine AS production
 
 # Create app user for security
 RUN addgroup -g 1001 -S nodejs && \
